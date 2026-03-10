@@ -1,0 +1,16 @@
+node_modules/
+.env
+.env.local
+*.log
+dist/
+build/
+__pycache__/
+*.pyc
+venv/
+.venv/
+ml-api/models/*.pkl
+ml-api/models/*.joblib
+backend/uploads/*
+!.gitkeep
+.DS_Store
+*.pem

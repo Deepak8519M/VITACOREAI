@@ -1,0 +1,17 @@
+{
+  "name": "vitacore-ai",
+  "version": "1.0.0",
+  "description": "Premium AI-powered healthcare prediction platform",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:ml": "cd ml-api && uvicorn main:app --reload",
+    "train": "cd ml-api && python train_models.py"
+  }
+}

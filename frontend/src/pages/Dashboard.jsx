@@ -104,6 +104,23 @@ export default function Dashboard() {
   const [summary, setSummary] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [showNotifications, setShowNotifications] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
+  const [notifications, setNotifications] = useState([
+    { id: 1, type: 'reminder', title: 'Medication Review', message: 'Time to review your current medications', time: '2 hours ago', priority: 'low', read: false },
+    { id: 2, type: 'alert', title: 'High Risk Detected', message: 'Elevated risk factors in recent predictions', time: '1 day ago', priority: 'high', read: false },
+    { id: 3, type: 'info', title: 'Health Tip', message: 'Seasonal flu vaccination recommended', time: '3 days ago', priority: 'medium', read: true },
+    { id: 4, type: 'success', title: 'Goal Achieved', message: 'You\'ve maintained healthy habits for 7 days!', time: '1 week ago', priority: 'low', read: true }
+  ])
+  const [notificationSettings, setNotificationSettings] = useState({
+    email: true,
+    push: true,
+    sms: false,
+    predictions: true,
+    alerts: true,
+    tips: false,
+    weekly: true
+  })
 
   useEffect(() => {
     const loadData = async () => {
@@ -143,6 +160,55 @@ export default function Dashboard() {
 
     loadData()
   }, [])
+
+  // Notification handlers
+  const handleNotificationClick = () => {
+    setShowNotifications(!showNotifications)
+    setShowSettings(false)
+  }
+
+  const handleSettingsClick = () => {
+    setShowSettings(!showSettings)
+    setShowNotifications(false)
+  }
+
+  const markAsRead = (id) => {
+    setNotifications(notifications.map(n => 
+      n.id === id ? { ...n, read: true } : n
+    ))
+  }
+
+  const markAllAsRead = () => {
+    setNotifications(notifications.map(n => ({ ...n, read: true })))
+  }
+
+  const updateNotificationSetting = (key, value) => {
+    setNotificationSettings(prev => ({ ...prev, [key]: value }))
+  }
+
+  // Download handler
+  const handleDownload = () => {
+    const reportData = {
+      healthScore: healthScore,
+      totalPredictions: history.length,
+      uniqueDiseases: new Set(history.map(h => h.diseaseType)).size,
+      highRiskCount: history.filter(h => h.result?.risk === 'High').length,
+      predictions: history,
+      summary: summary,
+      healthMetrics: healthMetrics,
+      generatedAt: new Date().toISOString()
+    }
+
+    const dataStr = JSON.stringify(reportData, null, 2)
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr)
+    
+    const exportFileDefaultName = `vitacore-health-report-${new Date().toISOString().split('T')[0]}.json`
+    
+    const linkElement = document.createElement('a')
+    linkElement.setAttribute('href', dataUri)
+    linkElement.setAttribute('download', exportFileDefaultName)
+    linkElement.click()
+  }
 
   if (loading) {
     return (
@@ -247,6 +313,51 @@ export default function Dashboard() {
     { country: 'Japan', avgScore: 82, population: '125M' }
   ]
 
+  // Additional data for new graphs
+  const monthlyTrends = [
+    { month: 'Jan', predictions: 45, avgRisk: 65, healthScore: 78 },
+    { month: 'Feb', predictions: 52, avgRisk: 62, healthScore: 82 },
+    { month: 'Mar', predictions: 48, avgRisk: 68, healthScore: 80 },
+    { month: 'Apr', predictions: 61, avgRisk: 70, healthScore: 85 },
+    { month: 'May', predictions: 55, avgRisk: 58, healthScore: 88 },
+    { month: 'Jun', predictions: 67, avgRisk: 64, healthScore: 86 }
+  ]
+
+  const ageGroupData = [
+    { ageGroup: '18-25', predictions: 12, avgScore: 88 },
+    { ageGroup: '26-35', predictions: 28, avgScore: 82 },
+    { ageGroup: '36-45', predictions: 35, avgScore: 75 },
+    { ageGroup: '46-55', predictions: 31, avgScore: 68 },
+    { ageGroup: '56-65', predictions: 22, avgScore: 62 },
+    { ageGroup: '65+', predictions: 15, avgScore: 58 }
+  ]
+
+  const symptomCorrelation = [
+    { symptom: 'Fatigue', correlation: 0.78, predictions: 45 },
+    { symptom: 'Headache', correlation: 0.65, predictions: 38 },
+    { symptom: 'Chest Pain', correlation: 0.92, predictions: 28 },
+    { symptom: 'Dizziness', correlation: 0.71, predictions: 32 },
+    { symptom: 'Shortness of Breath', correlation: 0.85, predictions: 25 },
+    { symptom: 'Nausea', correlation: 0.58, predictions: 41 }
+  ]
+
+  const treatmentEffectiveness = [
+    { treatment: 'Medication', effectiveness: 78, patients: 156 },
+    { treatment: 'Lifestyle Changes', effectiveness: 85, patients: 203 },
+    { treatment: 'Physical Therapy', effectiveness: 72, patients: 89 },
+    { treatment: 'Surgery', effectiveness: 91, patients: 45 },
+    { treatment: 'Alternative Medicine', effectiveness: 64, patients: 67 }
+  ]
+
+  const vitalSignsData = [
+    { time: '00:00', heartRate: 72, bloodPressure: 120, temperature: 98.6, oxygen: 98 },
+    { time: '04:00', heartRate: 68, bloodPressure: 118, temperature: 98.4, oxygen: 98 },
+    { time: '08:00', heartRate: 75, bloodPressure: 122, temperature: 98.6, oxygen: 97 },
+    { time: '12:00', heartRate: 80, bloodPressure: 125, temperature: 98.8, oxygen: 96 },
+    { time: '16:00', heartRate: 78, bloodPressure: 123, temperature: 98.7, oxygen: 97 },
+    { time: '20:00', heartRate: 70, bloodPressure: 119, temperature: 98.5, oxygen: 98 }
+  ]
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
       <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
@@ -281,14 +392,193 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <button className="relative p-2 rounded-xl bg-slate-800 border border-slate-700 hover:bg-slate-700 transition-colors">
-              <Bell className="w-5 h-5 text-slate-400" />
-              <div className="absolute top-1 right-1 w-2 h-2 rounded-full bg-red-500"></div>
-            </button>
-            <button className="p-2 rounded-xl bg-slate-800 border border-slate-700 hover:bg-slate-700 transition-colors">
-              <Settings className="w-5 h-5 text-slate-400" />
-            </button>
-            <button className="p-2 rounded-xl bg-slate-800 border border-slate-700 hover:bg-slate-700 transition-colors">
+            <div className="relative">
+              <button 
+                onClick={handleNotificationClick}
+                className="relative p-2 rounded-xl bg-slate-800 border border-slate-700 hover:bg-slate-700 transition-colors"
+              >
+                <Bell className="w-5 h-5 text-slate-400" />
+                <div className="absolute top-1 right-1 w-2 h-2 rounded-full bg-red-500"></div>
+              </button>
+              
+              {/* Notifications Dropdown */}
+              {showNotifications && (
+                <div className="absolute right-0 mt-2 w-80 bg-slate-900 border border-slate-700 rounded-xl shadow-xl z-50">
+                  <div className="p-4 border-b border-slate-700">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-white font-semibold">Notifications</h3>
+                      <button 
+                        onClick={markAllAsRead}
+                        className="text-blue-400 text-sm hover:text-blue-300"
+                      >
+                        Mark all read
+                      </button>
+                    </div>
+                  </div>
+                  <div className="max-h-96 overflow-y-auto">
+                    {notifications.map((notification) => (
+                      <div 
+                        key={notification.id}
+                        onClick={() => markAsRead(notification.id)}
+                        className={`p-4 border-b border-slate-800 cursor-pointer hover:bg-slate-800 transition-colors ${
+                          !notification.read ? 'bg-blue-500/5' : ''
+                        }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          {notification.priority === 'high' ? (
+                            <AlertCircle className="w-4 h-4 text-red-400 mt-0.5" />
+                          ) : notification.type === 'success' ? (
+                            <CheckCircle2 className="w-4 h-4 text-green-400 mt-0.5" />
+                          ) : (
+                            <Bell className="w-4 h-4 text-blue-400 mt-0.5" />
+                          )}
+                          <div className="flex-1">
+                            <h4 className="text-slate-100 text-sm font-medium">{notification.title}</h4>
+                            <p className="text-slate-400 text-xs mt-1">{notification.message}</p>
+                            <p className="text-slate-500 text-xs mt-2">{notification.time}</p>
+                          </div>
+                          {!notification.read && (
+                            <div className="w-2 h-2 rounded-full bg-blue-400"></div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="p-3 border-t border-slate-700">
+                    <button className="w-full text-center text-blue-400 text-sm hover:text-blue-300">
+                      View all notifications
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <div className="relative">
+              <button 
+                onClick={handleSettingsClick}
+                className="p-2 rounded-xl bg-slate-800 border border-slate-700 hover:bg-slate-700 transition-colors"
+              >
+                <Settings className="w-5 h-5 text-slate-400" />
+              </button>
+              
+              {/* Settings Dropdown */}
+              {showSettings && (
+                <div className="absolute right-0 mt-2 w-80 bg-slate-900 border border-slate-700 rounded-xl shadow-xl z-50">
+                  <div className="p-4 border-b border-slate-700">
+                    <h3 className="text-white font-semibold">Notification Settings</h3>
+                  </div>
+                  <div className="p-4 space-y-4">
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-300 text-sm">Email Notifications</span>
+                        <button
+                          onClick={() => updateNotificationSetting('email', !notificationSettings.email)}
+                          className={`w-12 h-6 rounded-full transition-colors ${
+                            notificationSettings.email ? 'bg-blue-600' : 'bg-slate-600'
+                          }`}
+                        >
+                          <div className={`w-5 h-5 bg-white rounded-full transition-transform ${
+                            notificationSettings.email ? 'translate-x-6' : 'translate-x-0.5'
+                          }`}></div>
+                        </button>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-300 text-sm">Push Notifications</span>
+                        <button
+                          onClick={() => updateNotificationSetting('push', !notificationSettings.push)}
+                          className={`w-12 h-6 rounded-full transition-colors ${
+                            notificationSettings.push ? 'bg-blue-600' : 'bg-slate-600'
+                          }`}
+                        >
+                          <div className={`w-5 h-5 bg-white rounded-full transition-transform ${
+                            notificationSettings.push ? 'translate-x-6' : 'translate-x-0.5'
+                          }`}></div>
+                        </button>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-300 text-sm">SMS Alerts</span>
+                        <button
+                          onClick={() => updateNotificationSetting('sms', !notificationSettings.sms)}
+                          className={`w-12 h-6 rounded-full transition-colors ${
+                            notificationSettings.sms ? 'bg-blue-600' : 'bg-slate-600'
+                          }`}
+                        >
+                          <div className={`w-5 h-5 bg-white rounded-full transition-transform ${
+                            notificationSettings.sms ? 'translate-x-6' : 'translate-x-0.5'
+                          }`}></div>
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div className="border-t border-slate-700 pt-3 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-300 text-sm">Prediction Results</span>
+                        <button
+                          onClick={() => updateNotificationSetting('predictions', !notificationSettings.predictions)}
+                          className={`w-12 h-6 rounded-full transition-colors ${
+                            notificationSettings.predictions ? 'bg-blue-600' : 'bg-slate-600'
+                          }`}
+                        >
+                          <div className={`w-5 h-5 bg-white rounded-full transition-transform ${
+                            notificationSettings.predictions ? 'translate-x-6' : 'translate-x-0.5'
+                          }`}></div>
+                        </button>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-300 text-sm">Health Alerts</span>
+                        <button
+                          onClick={() => updateNotificationSetting('alerts', !notificationSettings.alerts)}
+                          className={`w-12 h-6 rounded-full transition-colors ${
+                            notificationSettings.alerts ? 'bg-blue-600' : 'bg-slate-600'
+                          }`}
+                        >
+                          <div className={`w-5 h-5 bg-white rounded-full transition-transform ${
+                            notificationSettings.alerts ? 'translate-x-6' : 'translate-x-0.5'
+                          }`}></div>
+                        </button>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-300 text-sm">Health Tips</span>
+                        <button
+                          onClick={() => updateNotificationSetting('tips', !notificationSettings.tips)}
+                          className={`w-12 h-6 rounded-full transition-colors ${
+                            notificationSettings.tips ? 'bg-blue-600' : 'bg-slate-600'
+                          }`}
+                        >
+                          <div className={`w-5 h-5 bg-white rounded-full transition-transform ${
+                            notificationSettings.tips ? 'translate-x-6' : 'translate-x-0.5'
+                          }`}></div>
+                        </button>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-300 text-sm">Weekly Summary</span>
+                        <button
+                          onClick={() => updateNotificationSetting('weekly', !notificationSettings.weekly)}
+                          className={`w-12 h-6 rounded-full transition-colors ${
+                            notificationSettings.weekly ? 'bg-blue-600' : 'bg-slate-600'
+                          }`}
+                        >
+                          <div className={`w-5 h-5 bg-white rounded-full transition-transform ${
+                            notificationSettings.weekly ? 'translate-x-6' : 'translate-x-0.5'
+                          }`}></div>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <button 
+              onClick={handleDownload}
+              className="p-2 rounded-xl bg-slate-800 border border-slate-700 hover:bg-slate-700 transition-colors"
+              title="Download Health Report"
+            >
               <Download className="w-5 h-5 text-slate-400" />
             </button>
           </div>
@@ -523,8 +813,8 @@ export default function Dashboard() {
                 <Bell className="w-5 h-5 text-slate-400" />
               </div>
               <div className="space-y-3">
-                {healthAlerts.map((alert, index) => (
-                  <div key={index} className={`p-3 rounded-xl border ${
+                {notifications.slice(0, 4).map((alert, index) => (
+                  <div key={alert.id} className={`p-3 rounded-xl border ${
                     alert.priority === 'high' ? 'bg-red-500/10 border-red-500/30' :
                     alert.priority === 'medium' ? 'bg-amber-500/10 border-amber-500/30' :
                     alert.type === 'success' ? 'bg-green-500/10 border-green-500/30' :
@@ -543,6 +833,9 @@ export default function Dashboard() {
                         <p className="text-slate-400 text-xs mt-1">{alert.message}</p>
                         <p className="text-slate-500 text-xs mt-2">{alert.time}</p>
                       </div>
+                      {!alert.read && (
+                        <div className="w-2 h-2 rounded-full bg-blue-400"></div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -585,6 +878,195 @@ export default function Dashboard() {
                   </div>
                   <ArrowRight className="w-4 h-4 text-purple-400 group-hover:translate-x-1 transition-transform" />
                 </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Advanced Analytics Dashboard */}
+        <div className="space-y-6">
+          <div className="text-center">
+            <h2 className="text-2xl font-semibold text-white mb-2">Advanced Health Analytics</h2>
+            <p className="text-slate-400">Comprehensive insights into your health trends and patterns</p>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Monthly Trends Line Chart */}
+            <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold text-white">6-Month Health Trends</h3>
+                <TrendingUp className="w-5 h-5 text-blue-400" />
+              </div>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={monthlyTrends}>
+                    <XAxis dataKey="month" stroke="#64748b" fontSize={12} tick={{ fill: '#94a3b8' }} />
+                    <YAxis stroke="#64748b" fontSize={12} tick={{ fill: '#94a3b8' }} />
+                    <Tooltip 
+                      contentStyle={{ 
+                        background: '#0f172a', 
+                        border: '1px solid #334155', 
+                        borderRadius: '12px', 
+                        fontFamily: 'Poppins' 
+                      }} 
+                    />
+                    <Line type="monotone" dataKey="healthScore" stroke="#10b981" strokeWidth={2} dot={{ fill: '#10b981' }} />
+                    <Line type="monotone" dataKey="avgRisk" stroke="#ef4444" strokeWidth={2} dot={{ fill: '#ef4444' }} />
+                    <Line type="monotone" dataKey="predictions" stroke="#3b82f6" strokeWidth={2} dot={{ fill: '#3b82f6' }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="flex items-center justify-center gap-6 mt-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                  <span className="text-xs text-slate-400">Health Score</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                  <span className="text-xs text-slate-400">Risk Level</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                  <span className="text-xs text-slate-400">Predictions</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Age Group Analysis */}
+            <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold text-white">Age Group Analysis</h3>
+                <Users className="w-5 h-5 text-purple-400" />
+              </div>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={ageGroupData}>
+                    <XAxis dataKey="ageGroup" stroke="#64748b" fontSize={12} tick={{ fill: '#94a3b8' }} />
+                    <YAxis stroke="#64748b" fontSize={12} tick={{ fill: '#94a3b8' }} />
+                    <Tooltip 
+                      contentStyle={{ 
+                        background: '#0f172a', 
+                        border: '1px solid #334155', 
+                        borderRadius: '12px', 
+                        fontFamily: 'Poppins' 
+                      }} 
+                    />
+                    <Bar dataKey="predictions" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="avgScore" fill="#10b981" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="flex items-center justify-center gap-6 mt-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-purple-500"></div>
+                  <span className="text-xs text-slate-400">Predictions</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                  <span className="text-xs text-slate-400">Avg Score</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Symptom Correlation */}
+            <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold text-white">Symptom-Disease Correlation</h3>
+                <Brain className="w-5 h-5 text-amber-400" />
+              </div>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={symptomCorrelation}>
+                    <XAxis dataKey="symptom" stroke="#64748b" fontSize={11} tick={{ fill: '#94a3b8' }} angle={-45} textAnchor="end" />
+                    <YAxis stroke="#64748b" fontSize={12} tick={{ fill: '#94a3b8' }} />
+                    <Tooltip 
+                      contentStyle={{ 
+                        background: '#0f172a', 
+                        border: '1px solid #334155', 
+                        borderRadius: '12px', 
+                        fontFamily: 'Poppins' 
+                      }} 
+                    />
+                    <Area type="monotone" dataKey="correlation" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.6} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="text-center mt-4">
+                <p className="text-xs text-slate-400">Correlation strength (0-1 scale)</p>
+              </div>
+            </div>
+
+            {/* Treatment Effectiveness */}
+            <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold text-white">Treatment Effectiveness</h3>
+                <Award className="w-5 h-5 text-green-400" />
+              </div>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={treatmentEffectiveness} layout="horizontal">
+                    <XAxis type="number" stroke="#64748b" fontSize={12} tick={{ fill: '#94a3b8' }} />
+                    <YAxis dataKey="treatment" type="category" stroke="#64748b" fontSize={11} tick={{ fill: '#94a3b8' }} />
+                    <Tooltip 
+                      contentStyle={{ 
+                        background: '#0f172a', 
+                        border: '1px solid #334155', 
+                        borderRadius: '12px', 
+                        fontFamily: 'Poppins' 
+                      }} 
+                    />
+                    <Bar dataKey="effectiveness" fill="#10b981" radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="text-center mt-4">
+                <p className="text-xs text-slate-400">Effectiveness percentage by treatment type</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Vital Signs Monitoring */}
+          <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-white">Real-time Vital Signs Monitoring</h3>
+              <Heart className="w-5 h-5 text-red-400" />
+            </div>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={vitalSignsData}>
+                  <XAxis dataKey="time" stroke="#64748b" fontSize={12} tick={{ fill: '#94a3b8' }} />
+                  <YAxis stroke="#64748b" fontSize={12} tick={{ fill: '#94a3b8' }} />
+                  <Tooltip 
+                    contentStyle={{ 
+                      background: '#0f172a', 
+                      border: '1px solid #334155', 
+                      borderRadius: '12px', 
+                      fontFamily: 'Poppins' 
+                    }} 
+                  />
+                  <Line type="monotone" dataKey="heartRate" stroke="#ef4444" strokeWidth={2} name="Heart Rate" />
+                  <Line type="monotone" dataKey="bloodPressure" stroke="#3b82f6" strokeWidth={2} name="Blood Pressure" />
+                  <Line type="monotone" dataKey="temperature" stroke="#f59e0b" strokeWidth={2} name="Temperature" />
+                  <Line type="monotone" dataKey="oxygen" stroke="#10b981" strokeWidth={2} name="Oxygen Level" />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="flex items-center justify-center gap-6 mt-4 flex-wrap">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                <span className="text-xs text-slate-400">Heart Rate</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                <span className="text-xs text-slate-400">Blood Pressure</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-amber-500"></div>
+                <span className="text-xs text-slate-400">Temperature</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                <span className="text-xs text-slate-400">Oxygen Level</span>
               </div>
             </div>
           </div>

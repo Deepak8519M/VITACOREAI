@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { Outlet, NavLink } from 'react-router-dom'
-import { Activity, Heart, FileText, User, LayoutDashboard, Wrench, FolderOpen, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Activity, Heart, FileText, User, LayoutDashboard, Wrench, FolderOpen, ChevronLeft, ChevronRight, Activity as ActivityIcon, Pill } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
 const nav = [
   { to: '/app', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/app/predictions', icon: Heart, label: 'Predictions' },
+  { to: '/app/vital-signs', icon: ActivityIcon, label: 'Vital Signs' },
+  { to: '/app/medication-management', icon: Pill, label: 'Medications' },
   { to: '/app/tools', icon: Wrench, label: 'Tools' },
   { to: '/app/health-vault', icon: FolderOpen, label: 'Health Vault' },
   { to: '/app/profile', icon: User, label: 'Profile' }

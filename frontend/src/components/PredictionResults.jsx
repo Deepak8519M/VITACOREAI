@@ -362,13 +362,21 @@ const PredictionResults = ({ result, disease, formData, onClose }) => {
             </div>
           </div>
           <div className="flex gap-2">
-            <button className="p-2 rounded-lg bg-slate-800 text-slate-400 hover:bg-slate-700 transition-colors">
+            <button 
+              onClick={() => window.print()}
+              className="p-2 rounded-lg bg-slate-800 text-slate-400 hover:bg-slate-700 transition-colors"
+              title="Download Report"
+            >
               <Download className="w-4 h-4" />
             </button>
             <button className="p-2 rounded-lg bg-slate-800 text-slate-400 hover:bg-slate-700 transition-colors">
               <Share2 className="w-4 h-4" />
             </button>
-            <button className="p-2 rounded-lg bg-slate-800 text-slate-400 hover:bg-slate-700 transition-colors">
+            <button 
+              onClick={() => window.print()}
+              className="p-2 rounded-lg bg-slate-800 text-slate-400 hover:bg-slate-700 transition-colors"
+              title="Print Report"
+            >
               <FileText className="w-4 h-4" />
             </button>
           </div>
@@ -773,12 +781,18 @@ const PredictionResults = ({ result, disease, formData, onClose }) => {
 
       {/* Action Buttons */}
       <div className="flex gap-3">
-        <button className="flex-1 px-6 py-3 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-500 transition-all flex items-center justify-center gap-2">
-          <Activity className="w-4 h-4" />
-          Book Consultation
+        <button 
+          onClick={() => window.print()}
+          className="flex-1 px-6 py-3 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-500 transition-all flex items-center justify-center gap-2"
+        >
+          <Download className="w-4 h-4" />
+          Download Report
         </button>
-        <button className="flex-1 px-6 py-3 rounded-xl bg-slate-800 text-white text-sm font-semibold hover:bg-slate-700 transition-all flex items-center justify-center gap-2">
-          <BarChart3 className="w-4 h-4" />
+        <button 
+          onClick={() => window.print()}
+          className="flex-1 px-6 py-3 rounded-xl bg-slate-800 text-white text-sm font-semibold hover:bg-slate-700 transition-all flex items-center justify-center gap-2"
+        >
+          <FileText className="w-4 h-4" />
           View Detailed Report
         </button>
         <button 

@@ -19,6 +19,9 @@ import PharmacyLocator from './pages/PharmacyLocator'
 import VitalId from './pages/VitalId'
 import MedScan from './pages/MedScan'
 import VitalPublic from './pages/VitalPublic'
+import MedicineComparator from './pages/MedicineComparator'
+import MedicalJargon from './pages/MedicalJargon'
+import MedAnalyzer from './pages/MedAnalyzer'
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
@@ -45,6 +48,9 @@ export default function App() {
         <Route path="tools/pharmacy-locator" element={<PharmacyLocator />} />
         <Route path="tools/vital-id" element={<VitalId />} />
         <Route path="tools/medscan" element={<MedScan />} />
+        <Route path="tools/medicine-comparator" element={<MedicineComparator />} />
+        <Route path="tools/medical-jargon" element={<MedicalJargon />} />
+        <Route path="tools/med-analyzer" element={<MedAnalyzer />} />
         <Route path="health-vault" element={<HealthVault />} />
         <Route path="medical-records" element={<Navigate to="/app/health-vault" replace />} />
         <Route path="profile" element={<Profile />} />

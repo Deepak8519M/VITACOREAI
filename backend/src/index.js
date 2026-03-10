@@ -18,6 +18,9 @@ import chatRoutes from './routes/chat.js';
 import reportComparisonRoutes from './routes/reportComparison.js';
 import vitalIdRoutes from './routes/vitalId.js';
 import reportImageRoutes from './routes/reportImage.js';
+import healthVaultRoutes from './routes/healthVault.js';
+import medicineCompareRoutes from './routes/medicineCompare.js';
+import jargonCleanerRoutes from './routes/jargonCleaner.js';
 
 dotenv.config();
 connectDB();
@@ -48,6 +51,9 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/report-comparison', reportComparisonRoutes);
 app.use('/api/vital-id', vitalIdRoutes);
 app.use('/api/report-image', reportImageRoutes);
+app.use('/api/health-vault', healthVaultRoutes);
+app.use('/api/medicine', medicineCompareRoutes);
+app.use('/api/jargon', jargonCleanerRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'VitaCore AI API is running' });

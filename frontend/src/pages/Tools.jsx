@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { GitCompare, MessagesSquare, MapPin, Pill, ShieldAlert, ScanText } from 'lucide-react'
+import { GitCompare, MessagesSquare, MapPin, Pill, ShieldAlert, ScanText, Activity, FileText, Scan } from 'lucide-react'
 
 const TOOLS = [
   {
@@ -31,6 +31,20 @@ const TOOLS = [
     path: '/app/tools/pharmacy-locator'
   },
   {
+    id: 'medicine-comparator',
+    name: 'Medicine Price Comparator',
+    icon: Activity,
+    desc: 'Search any medicine and compare estimated prices, generics, and savings across major platforms.',
+    path: '/app/tools/medicine-comparator'
+  },
+  {
+    id: 'medical-jargon',
+    name: 'Medical Jargon Cleaner',
+    icon: FileText,
+    desc: 'Paste complex medical text and get a clear, patient-friendly explanation with a glossary.',
+    path: '/app/tools/medical-jargon'
+  },
+  {
     id: 'vital-id',
     name: 'VITAL ID',
     icon: ShieldAlert,
@@ -43,6 +57,13 @@ const TOOLS = [
     icon: ScanText,
     desc: 'Upload a medical report image to extract biomarkers, ranges, and a structured summary.',
     path: '/app/tools/medscan'
+  },
+  {
+    id: 'med-analyzer',
+    name: 'MedAnalyzer',
+    icon: Scan,
+    desc: 'Scan a medicine strip or search by name to understand its purpose, safety, and usage in simple language.',
+    path: '/app/tools/med-analyzer'
   }
 ]
 

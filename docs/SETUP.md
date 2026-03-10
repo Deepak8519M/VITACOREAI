@@ -47,6 +47,8 @@ JWT_SECRET=change-this-to-a-long-random-string-in-production
 JWT_EXPIRES_IN=7d
 ML_API_URL=http://localhost:8000
 NODE_ENV=development
+GOOGLE_AI_API_KEY=your_gemini_api_key_here
+GOOGLE_AI_MODEL=gemini-2.5-flash
 ```
 
 ## Step 4: ML API Setup
@@ -102,6 +104,12 @@ npm run dev
 For the AI Report Comparison tool, add a Gemini API key:
 1. Get an API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
 2. Create `frontend/.env` with: `VITE_GEMINI_API_KEY=your_key_here`
+
+### Health Chatbot Tool (recommended secure setup)
+
+The chatbot uses the backend so your API key is not exposed in the browser:
+1. Put the key in `backend/.env` as `GOOGLE_AI_API_KEY`
+2. Restart the backend server
 
 ## Step 6: Access
 

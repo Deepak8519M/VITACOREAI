@@ -4,9 +4,7 @@ import {
   Upload, FileText, ArrowRight, TrendingUp, TrendingDown, Minus, AlertCircle, CheckCircle2,
   Activity, ChevronRight, RefreshCw
 } from 'lucide-react'
-
-const API_KEY = import.meta.env.VITE_GEMINI_API_KEY || ''
-const MODEL_NAME = 'gemini-2.5-flash-preview-09-2025'
+import api from '../utils/api'
 
 const fileToBase64 = (file) => {
   return new Promise((resolve, reject) => {
@@ -15,24 +13,6 @@ const fileToBase64 = (file) => {
     reader.onload = () => resolve(reader.result.split(',')[1])
     reader.onerror = (err) => reject(err)
   })
-}
-
-const fetchWithRetry = async (url, options, retries = 5, backoff = 1000) => {
-  try {
-    const res = await fetch(url, options)
-    const data = await res.json().catch(() => ({}))
-    if (!res.ok) {
-      const msg = data?.error?.message || data?.error?.details?.[0]?.message || `HTTP ${res.status}`
-      throw new Error(msg)
-    }
-    return data
-  } catch (err) {
-    if (retries > 0) {
-      await new Promise(r => setTimeout(r, backoff))
-      return fetchWithRetry(url, options, retries - 1, backoff * 2)
-    }
-    throw err
-  }
 }
 
 const StatusBadge = ({ status }) => {
@@ -73,10 +53,6 @@ export default function ReportComparison() {
       setError('Please upload both reports to begin comparison.')
       return
     }
-    if (!API_KEY) {
-      setError('Gemini API key not configured. Add VITE_GEMINI_API_KEY to your .env file.')
-      return
-    }
     setIsComparing(true)
     setError(null)
     setAnalysis(null)
@@ -104,41 +80,15 @@ Response Format: JSON strictly following this schema:
   ]
 }`
 
-    const payload = {
-      contents: [{
-        role: 'user',
-        parts: [
-          { text: 'Compare these two medical reports and provide a detailed analysis.' },
-          { inlineData: { mimeType: reportOld.type, data: reportOld.data } },
-          { inlineData: { mimeType: reportNew.type, data: reportNew.data } }
-        ]
-      }],
-      systemInstruction: { parts: [{ text: systemPrompt }] },
-      generationConfig: { responseMimeType: 'application/json' }
-    }
-
     try {
-      const result = await fetchWithRetry(
-        `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${API_KEY}`,
-        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }
-      )
-      const text = result.candidates?.[0]?.content?.parts?.[0]?.text
-      if (!text) throw new Error('No response from AI')
-      const parsed = JSON.parse(text)
-      setAnalysis(parsed)
+      const { data } = await api.post('/report-comparison', {
+        reportOld: { data: reportOld.data, type: reportOld.type },
+        reportNew: { data: reportNew.data, type: reportNew.type }
+      })
+      setAnalysis(data)
     } catch (err) {
-      const msg = err?.message || 'Unknown error'
-      if (msg.includes('API key') || msg.includes('403') || msg.includes('401')) {
-        setError('Invalid or missing API key. Check VITE_GEMINI_API_KEY in frontend/.env')
-      } else if (msg.includes('404') || msg.includes('not found')) {
-        setError('Model unavailable. Try again later.')
-      } else if (msg.includes('quota') || msg.includes('429')) {
-        setError('API rate limit reached. Please try again in a few minutes.')
-      } else if (msg.includes('image') || msg.includes('Invalid')) {
-        setError('Unsupported file format. Use clear PNG/JPG images (PDF may not work with this model).')
-      } else {
-        setError(`Analysis failed: ${msg}`)
-      }
+      const msg = err?.response?.data?.error || err?.message || 'Unknown error'
+      setError(`Analysis failed: ${msg}`)
     } finally {
       setIsComparing(false)
     }

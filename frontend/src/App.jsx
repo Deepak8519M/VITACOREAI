@@ -12,6 +12,12 @@ import Profile from './pages/Profile'
 import SymptomChecker from './pages/SymptomChecker'
 import Tools from './pages/Tools'
 import ReportComparison from './pages/ReportComparison'
+import Chatbot from './pages/Chatbot'
+import HospitalLocator from './pages/HospitalLocator'
+import PharmacyLocator from './pages/PharmacyLocator'
+import VitalId from './pages/VitalId'
+import MedScan from './pages/MedScan'
+import VitalPublic from './pages/VitalPublic'
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
@@ -26,12 +32,18 @@ export default function App() {
       <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<SignUp />} />
+      <Route path="/vital/:token" element={<VitalPublic />} />
       <Route path="/app" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
         <Route index element={<Dashboard />} />
         <Route path="predictions" element={<Predictions />} />
         <Route path="predictions/:disease" element={<PredictionForm />} />
         <Route path="tools" element={<Tools />} />
         <Route path="tools/report-comparison" element={<ReportComparison />} />
+        <Route path="tools/chatbot" element={<Chatbot />} />
+        <Route path="tools/hospital-locator" element={<HospitalLocator />} />
+        <Route path="tools/pharmacy-locator" element={<PharmacyLocator />} />
+        <Route path="tools/vital-id" element={<VitalId />} />
+        <Route path="tools/medscan" element={<MedScan />} />
         <Route path="medical-records" element={<MedicalRecords />} />
         <Route path="profile" element={<Profile />} />
         <Route path="symptom-checker" element={<SymptomChecker />} />

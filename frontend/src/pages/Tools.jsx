@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { GitCompare } from 'lucide-react'
+import { GitCompare, MessagesSquare, MapPin, Pill, ShieldAlert, ScanText } from 'lucide-react'
 
 const TOOLS = [
   {
@@ -8,6 +8,41 @@ const TOOLS = [
     icon: GitCompare,
     desc: 'Upload historical and current medical reports to track health progress with AI analysis.',
     path: '/app/tools/report-comparison'
+  },
+  {
+    id: 'health-chatbot',
+    name: 'Health Chatbot',
+    icon: MessagesSquare,
+    desc: 'Chat with VitaCore AI for health guidance, symptom questions, and next-step suggestions.',
+    path: '/app/tools/chatbot'
+  },
+  {
+    id: 'hospital-locator',
+    name: 'Nearby Hospital Locator',
+    icon: MapPin,
+    desc: 'Search any city/area/pincode and find nearby hospitals and clinics (OpenStreetMap).',
+    path: '/app/tools/hospital-locator'
+  },
+  {
+    id: 'pharmacy-locator',
+    name: 'Nearby Pharmacy Locator',
+    icon: Pill,
+    desc: 'Find pharmacies near a location (or near you) and view simulated medicine price comparisons.',
+    path: '/app/tools/pharmacy-locator'
+  },
+  {
+    id: 'vital-id',
+    name: 'VITAL ID',
+    icon: ShieldAlert,
+    desc: 'Emergency medical profile: blood group, allergies, medications, EMS instructions, and contacts.',
+    path: '/app/tools/vital-id'
+  },
+  {
+    id: 'medscan',
+    name: 'MedScan AI',
+    icon: ScanText,
+    desc: 'Upload a medical report image to extract biomarkers, ranges, and a structured summary.',
+    path: '/app/tools/medscan'
   }
 ]
 

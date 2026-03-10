@@ -1,5 +1,5 @@
 import { Outlet, NavLink } from 'react-router-dom'
-import { Activity, Heart, FileText, User, Stethoscope, LayoutDashboard, Wrench } from 'lucide-react'
+import { Activity, Heart, FileText, User, Stethoscope, LayoutDashboard, Wrench, FolderOpen } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
 const nav = [
@@ -7,7 +7,7 @@ const nav = [
   { to: '/app/predictions', icon: Heart, label: 'Predictions' },
   { to: '/app/tools', icon: Wrench, label: 'Tools' },
   { to: '/app/symptom-checker', icon: Stethoscope, label: 'Symptom Checker' },
-  { to: '/app/medical-records', icon: FileText, label: 'Medical Records' },
+  { to: '/app/health-vault', icon: FolderOpen, label: 'Health Vault' },
   { to: '/app/profile', icon: User, label: 'Profile' }
 ]
 

@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard'
 import Predictions from './pages/Predictions'
 import PredictionForm from './pages/PredictionForm'
 import MedicalRecords from './pages/MedicalRecords'
+import HealthVault from './pages/HealthVault'
 import Profile from './pages/Profile'
 import SymptomChecker from './pages/SymptomChecker'
 import Tools from './pages/Tools'
@@ -44,7 +45,8 @@ export default function App() {
         <Route path="tools/pharmacy-locator" element={<PharmacyLocator />} />
         <Route path="tools/vital-id" element={<VitalId />} />
         <Route path="tools/medscan" element={<MedScan />} />
-        <Route path="medical-records" element={<MedicalRecords />} />
+        <Route path="health-vault" element={<HealthVault />} />
+        <Route path="medical-records" element={<Navigate to="/app/health-vault" replace />} />
         <Route path="profile" element={<Profile />} />
         <Route path="symptom-checker" element={<SymptomChecker />} />
       </Route>

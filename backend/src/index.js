@@ -21,6 +21,8 @@ import reportImageRoutes from './routes/reportImage.js';
 import healthVaultRoutes from './routes/healthVault.js';
 import medicineCompareRoutes from './routes/medicineCompare.js';
 import jargonCleanerRoutes from './routes/jargonCleaner.js';
+import smartMedicineAltRoutes from './routes/smartMedicineAlt.js';
+import nppaToolsRoutes from './routes/nppaTools.js';
 
 dotenv.config();
 connectDB();
@@ -54,6 +56,8 @@ app.use('/api/report-image', reportImageRoutes);
 app.use('/api/health-vault', healthVaultRoutes);
 app.use('/api/medicine', medicineCompareRoutes);
 app.use('/api/jargon', jargonCleanerRoutes);
+app.use('/api/smart-medicine', smartMedicineAltRoutes);
+app.use('/api/nppa', nppaToolsRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'VitaCore AI API is running' });

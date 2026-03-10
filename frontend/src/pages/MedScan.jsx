@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
+import { Link } from 'react-router-dom'
 import {
   Upload,
   FileText,
@@ -170,6 +171,13 @@ export default function MedScan() {
             <span>MedScan AI</span>
           </div>
           <div className="hidden sm:flex items-center gap-4 text-[11px] font-medium text-slate-400">
+            <Link
+              to="/app/tools"
+              className="inline-flex items-center gap-1 text-xs text-slate-400 hover:text-slate-100 transition-colors"
+            >
+              <span className="text-base leading-none">←</span>
+              Back to Tools
+            </Link>
             <span className="inline-flex items-center gap-1.5">
               <ShieldAlert className="w-3.5 h-3.5 text-emerald-500" /> Private
             </span>

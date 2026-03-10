@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import {
   Search,
   MapPin,
@@ -155,6 +156,15 @@ export default function PharmacyLocator() {
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans rounded-2xl border border-slate-800 overflow-hidden">
       <header className="bg-slate-900 text-white p-6 shadow-lg sticky top-0 z-20 border-b border-slate-800">
         <div className="max-w-5xl mx-auto">
+          <div className="flex items-center justify-between mb-2">
+            <Link
+              to="/app/tools"
+              className="inline-flex items-center gap-1 text-xs text-slate-400 hover:text-slate-100 transition-colors"
+            >
+              <span className="text-base leading-none">←</span>
+              Back to Tools
+            </Link>
+          </div>
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <div className="bg-blue-600/10 p-2 rounded-xl border border-slate-800">

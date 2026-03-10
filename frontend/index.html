@@ -8,12 +8,64 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-      body { margin: 0; background: #020617; color: #f8fafc; font-family: 'Poppins', system-ui, sans-serif; min-height: 100vh; }
-      #root { min-height: 100vh; }
+      body {
+        margin: 0;
+        background: #020617;
+        color: #f8fafc;
+        font-family: 'Poppins', system-ui, sans-serif;
+        min-height: 100vh;
+      }
+      #root {
+        min-height: 100vh;
+      }
+      .vc-loading {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+      }
+      .vc-spinner {
+        width: 42px;
+        height: 42px;
+        border-radius: 999px;
+        border: 3px solid rgba(30, 64, 175, 0.2);
+        border-top-color: #3b82f6;
+        animation: vc-spin 0.9s linear infinite;
+        box-shadow: 0 0 20px rgba(37, 99, 235, 0.5);
+      }
+      .vc-text {
+        font-size: 0.85rem;
+        letter-spacing: 0.25em;
+        text-transform: uppercase;
+        color: #94a3b8;
+      }
+      .vc-dot {
+        width: 5px;
+        height: 5px;
+        border-radius: 999px;
+        background: #3b82f6;
+        box-shadow: 0 0 12px rgba(59, 130, 246, 0.9);
+        animation: vc-pulse 1.2s ease-in-out infinite;
+      }
+      @keyframes vc-spin {
+        to { transform: rotate(360deg); }
+      }
+      @keyframes vc-pulse {
+        0%, 100% { transform: scale(1); opacity: 0.5; }
+        50% { transform: scale(1.5); opacity: 1; }
+      }
     </style>
   </head>
   <body>
-    <div id="root">Loading VitaCore...</div>
+    <div id="root">
+      <div class="vc-loading">
+        <div class="vc-spinner"></div>
+        <div class="vc-text">LOADING VITACORE</div>
+        <div class="vc-dot"></div>
+      </div>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

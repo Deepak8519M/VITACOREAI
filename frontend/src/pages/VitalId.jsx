@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import {
   Plus,
   Phone,
@@ -183,6 +184,15 @@ export default function VitalId() {
 
   return (
     <div className="max-w-6xl space-y-8 animate-fade-in">
+      <div className="flex items-center justify-between">
+        <Link
+          to="/app/tools"
+          className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-slate-100 transition-colors"
+        >
+          <span className="text-base leading-none">←</span>
+          Back to Tools
+        </Link>
+      </div>
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
         <div>
           <h1 className="text-2xl font-semibold text-white flex items-center gap-2">

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { MessagesSquare, Send, AlertCircle, ShieldAlert } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { MessagesSquare, Send, AlertCircle, ShieldAlert, ArrowLeft } from 'lucide-react'
 import api from '../utils/api'
 
 export default function Chatbot() {
@@ -50,6 +51,15 @@ export default function Chatbot() {
 
   return (
     <div className="max-w-4xl space-y-6 animate-fade-in">
+      <div className="flex items-center justify-between gap-2">
+        <Link
+          to="/app/tools"
+          className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-slate-100 transition-colors"
+        >
+          <ArrowLeft className="w-3 h-3" />
+          Back to Tools
+        </Link>
+      </div>
       <div>
         <h1 className="text-2xl font-semibold text-white flex items-center gap-2">
           <div className="w-9 h-9 rounded-xl bg-blue-600/10 flex items-center justify-center border border-slate-800">

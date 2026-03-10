@@ -22,6 +22,11 @@ import VitalPublic from './pages/VitalPublic'
 import MedicineComparator from './pages/MedicineComparator'
 import MedicalJargon from './pages/MedicalJargon'
 import MedAnalyzer from './pages/MedAnalyzer'
+import VitalSense from './pages/VitalSense'
+import SmartMedicineAlt from './pages/SmartMedicineAlt'
+import NppaOvercharge from './pages/NppaOvercharge'
+import NppaCheapestDose from './pages/NppaCheapestDose'
+import NppaBasket from './pages/NppaBasket'
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
@@ -51,6 +56,11 @@ export default function App() {
         <Route path="tools/medicine-comparator" element={<MedicineComparator />} />
         <Route path="tools/medical-jargon" element={<MedicalJargon />} />
         <Route path="tools/med-analyzer" element={<MedAnalyzer />} />
+        <Route path="tools/smart-alternatives" element={<SmartMedicineAlt />} />
+        <Route path="tools/nppa-overcharge" element={<NppaOvercharge />} />
+        <Route path="tools/nppa-cheapest-dose" element={<NppaCheapestDose />} />
+        <Route path="tools/nppa-basket" element={<NppaBasket />} />
+        <Route path="tools/vitalsense" element={<VitalSense />} />
         <Route path="health-vault" element={<HealthVault />} />
         <Route path="medical-records" element={<Navigate to="/app/health-vault" replace />} />
         <Route path="profile" element={<Profile />} />

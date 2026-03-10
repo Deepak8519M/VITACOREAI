@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import {
   Search,
   MapPin,
@@ -126,6 +127,15 @@ export default function HospitalLocator() {
     <div className="min-h-[calc(100vh-64px)] bg-slate-950 font-sans text-slate-100 rounded-2xl border border-slate-800 overflow-hidden">
       <header className="bg-slate-900 border-b border-slate-800 sticky top-0 z-10 shadow-lg">
         <div className="max-w-6xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between mb-2">
+            <Link
+              to="/app/tools"
+              className="inline-flex items-center gap-1 text-xs text-slate-400 hover:text-slate-100 transition-colors"
+            >
+              <span className="text-base leading-none">←</span>
+              Back to Tools
+            </Link>
+          </div>
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <div className="p-2 bg-blue-600 rounded-lg shadow-md">

@@ -1,4 +1,5 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import {
   Camera,
   Upload,
@@ -18,10 +19,8 @@ import {
   Keyboard
 } from 'lucide-react'
 
-// WARNING: Keeping API key in frontend is NOT recommended for production.
-// You asked explicitly to keep it here instead of .env.
-// Replace this placeholder with your real key for local testing only.
-const API_KEY = 'AIzaSyBBGDpK84cPIH_CnnU-MMh6j0fh-Md7l4E'
+const API_KEY =
+  import.meta.env.VITE_GEMINI_MEDANALYZER_KEY || import.meta.env.VITE_GEMINI_API_KEY || ''
 const MODEL = 'gemini-2.5-flash'
 
 const InfoSection = ({ icon: Icon, title, content, color = 'blue', list = false, className = '' }) => {
@@ -72,6 +71,34 @@ export default function MedAnalyzer() {
   const [manualInput, setManualInput] = useState('')
   const [viewMode, setViewMode] = useState('full')
   const fileInputRef = useRef(null)
+
+  // Restore last session from localStorage
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem('medAnalyzerState')
+      if (!raw) return
+      const parsed = JSON.parse(raw)
+      if (parsed?.analysisResult) setAnalysisResult(parsed.analysisResult)
+      if (typeof parsed?.manualInput === 'string') setManualInput(parsed.manualInput)
+      if (parsed?.viewMode === 'simple' || parsed?.viewMode === 'full') setViewMode(parsed.viewMode)
+    } catch {
+      // ignore corrupt storage
+    }
+  }, [])
+
+  // Persist current state
+  useEffect(() => {
+    const snapshot = {
+      analysisResult,
+      manualInput,
+      viewMode
+    }
+    try {
+      window.localStorage.setItem('medAnalyzerState', JSON.stringify(snapshot))
+    } catch {
+      // ignore quota/storage errors
+    }
+  }, [analysisResult, manualInput, viewMode])
 
   const handleImageChange = (e) => {
     const file = e.target.files?.[0]
@@ -223,6 +250,11 @@ Rules:
     setAnalysisResult(null)
     setError(null)
     setManualInput('')
+    try {
+      window.localStorage.removeItem('medAnalyzerState')
+    } catch {
+      // ignore
+    }
   }
 
   return (
@@ -244,6 +276,14 @@ Rules:
             <span className="text-[10px] text-indigo-200 font-bold uppercase tracking-widest">Safe Knowledge AI</span>
           </div>
         </div>
+        <div className="flex items-center gap-4">
+          <Link
+            to="/app/tools"
+            className="inline-flex items-center gap-1 text-[10px] text-indigo-100/80 hover:text-white transition-colors"
+          >
+            <span className="text-base leading-none">←</span>
+            Back to Tools
+          </Link>
         {analysisResult && (
           <button
             onClick={reset}
@@ -252,9 +292,10 @@ Rules:
             <RefreshCcw size={14} /> NEW ANALYSIS
           </button>
         )}
+        </div>
       </header>
 
-      <main className={`mx-auto px-4 py-8 transition-all duration-500 ${analysisResult ? 'max-w-5xl' : 'max-w-2xl'}`}>
+      <main className="mx-auto px-4 py-8 max-w-6xl transition-all duration-500">
         {/* Input */}
         {!analysisResult && !loading && (
           <div className="space-y-8">

@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Stethoscope } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { Stethoscope, ArrowLeft } from 'lucide-react'
 import api from '../utils/api'
 
 const SUGGESTIONS = ['headache', 'chest pain', 'fatigue', 'shortness of breath', 'nausea', 'fever', 'cough', 'dizziness', 'swelling', 'abdominal pain']
@@ -35,6 +36,15 @@ export default function SymptomChecker() {
 
   return (
     <div className="max-w-2xl space-y-6 animate-fade-in">
+      <div className="flex items-center justify-between gap-2">
+        <Link
+          to="/app/tools"
+          className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-slate-100 transition-colors"
+        >
+          <ArrowLeft className="w-3 h-3" />
+          Back to Tools
+        </Link>
+      </div>
       <div>
         <h1 className="text-2xl font-semibold text-white flex items-center gap-2">
           <div className="w-9 h-9 rounded-xl bg-blue-600/10 flex items-center justify-center border border-slate-800">

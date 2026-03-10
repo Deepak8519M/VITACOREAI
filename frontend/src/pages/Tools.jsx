@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { GitCompare, MessagesSquare, MapPin, Pill, ShieldAlert, ScanText, Activity, FileText, Scan } from 'lucide-react'
+import { GitCompare, MessagesSquare, MapPin, Pill, ShieldAlert, ScanText, Activity, FileText, Scan, HeartPulse, Stethoscope, Scale, ClipboardList } from 'lucide-react'
 
 const TOOLS = [
   {
@@ -34,8 +34,36 @@ const TOOLS = [
     id: 'medicine-comparator',
     name: 'Medicine Price Comparator',
     icon: Activity,
-    desc: 'Search any medicine and compare estimated prices, generics, and savings across major platforms.',
+    desc: 'Search a medicine and compare prices across brands for the same generic using NPPA data.',
     path: '/app/tools/medicine-comparator'
+  },
+  {
+    id: 'smart-medicine-alt',
+    name: 'Smart Medicine Alternatives',
+    icon: GitCompare,
+    desc: 'Use RxClass to discover clinically similar medicine classes and potential alternatives when a drug is expensive or unavailable.',
+    path: '/app/tools/smart-alternatives'
+  },
+  {
+    id: 'nppa-overcharge',
+    name: 'NPPA Overcharge Detector',
+    icon: Scale,
+    desc: 'Enter billed price vs quantity and see if it exceeds official NPPA ceiling prices for that medicine.',
+    path: '/app/tools/nppa-overcharge'
+  },
+  {
+    id: 'nppa-cheapest-dose',
+    name: 'Cheapest NPPA Dose Finder',
+    icon: Pill,
+    desc: 'For a given molecule, find which strengths/forms have the lowest NPPA ceiling price per unit.',
+    path: '/app/tools/nppa-cheapest-dose'
+  },
+  {
+    id: 'nppa-basket',
+    name: 'Medicine Basket Estimator',
+    icon: ClipboardList,
+    desc: 'Build a monthly chronic‑care basket and estimate total monthly/yearly cost from NPPA ceilings.',
+    path: '/app/tools/nppa-basket'
   },
   {
     id: 'medical-jargon',
@@ -64,6 +92,20 @@ const TOOLS = [
     icon: Scan,
     desc: 'Scan a medicine strip or search by name to understand its purpose, safety, and usage in simple language.',
     path: '/app/tools/med-analyzer'
+  },
+  {
+    id: 'vitalsense',
+    name: 'VitalSense Assessment',
+    icon: HeartPulse,
+    desc: 'Step-through AI symptom assessment that summarizes risks, lifestyle advice, and suggested screenings.',
+    path: '/app/tools/vitalsense'
+  },
+  {
+    id: 'symptom-checker',
+    name: 'Symptom Checker',
+    icon: Stethoscope,
+    desc: 'Quickly enter symptoms to get structured pre-consultation guidance (not a diagnosis).',
+    path: '/app/symptom-checker'
   }
 ]
 

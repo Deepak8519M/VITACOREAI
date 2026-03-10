@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import {
   FileText,
   Sparkles,
@@ -172,6 +173,15 @@ Output ONLY valid JSON, no markdown fences or extra commentary.`
 
   return (
     <div className="max-w-6xl space-y-8 animate-fade-in">
+      <div className="flex items-center justify-between">
+        <Link
+          to="/app/tools"
+          className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-slate-100 transition-colors"
+        >
+          <span className="text-base leading-none">←</span>
+          Back to Tools
+        </Link>
+      </div>
       <header className="text-center mb-4">
         <div className="inline-flex items-center justify-center p-3 bg-blue-500/10 rounded-2xl mb-3 text-blue-400 border border-blue-500/20">
           <FileText className="w-6 h-6" />

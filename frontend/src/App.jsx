@@ -7,6 +7,7 @@ import SignUp from './pages/SignUp'
 import Dashboard from './pages/Dashboard'
 import Predictions from './pages/Predictions'
 import PredictionForm from './pages/PredictionForm'
+import PredictionHistoryPage from './pages/PredictionHistoryPage'
 import MedicalRecords from './pages/MedicalRecords'
 import HealthVault from './pages/HealthVault'
 import Profile from './pages/Profile'
@@ -46,6 +47,7 @@ export default function App() {
         <Route index element={<Dashboard />} />
         <Route path="predictions" element={<Predictions />} />
         <Route path="predictions/:disease" element={<PredictionForm />} />
+        <Route path="predictions/history" element={<PredictionHistoryPage />} />
         <Route path="tools" element={<Tools />} />
         <Route path="tools/report-comparison" element={<ReportComparison />} />
         <Route path="tools/chatbot" element={<Chatbot />} />

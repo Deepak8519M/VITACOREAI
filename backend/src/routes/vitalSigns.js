@@ -1,17 +1,17 @@
 import express from 'express'
-import cors from 'cors'
+import { body, query, param, validationResult } from 'express-validator'
+import auth from '../middleware/auth.js'
+import VitalSigns from '../models/VitalSigns.js'
 import rateLimit from 'express-rate-limit'
 
 const router = express.Router()
 
-// Mock database for vital signs tracking
-const vitalSignsDB = {
-  bmi: [],
-  bloodPressure: [],
-  heartRate: [],
-  bloodSugar: [],
-  temperature: []
-}
+// Rate limiting for vital signs endpoints
+const vitalSignsLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: { error: 'Too many vital signs requests, please try again later.' }
+})
 
 // Health risk calculators
 const calculateBMICategory = (bmi) => {
@@ -78,21 +78,45 @@ const calculateTemperatureCategory = (temp, unit) => {
   return { category: 'Very High Fever', color: 'rose', risk: 'critical' }
 }
 
-// BMI Calculator
-router.post('/bmi/calculate', (req, res) => {
+// BMI Calculator with proper validation
+router.post('/bmi/calculate', [
+  vitalSignsLimiter,
+  auth,
+  body('height').isFloat({ min: 50, max: 300 }).withMessage('Height must be between 50-300 cm'),
+  body('weight').isFloat({ min: 1, max: 500 }).withMessage('Weight must be between 1-500 kg'),
+  body('heightUnit').optional().isIn(['cm', 'inches']).withMessage('Height unit must be cm or inches'),
+  body('weightUnit').optional().isIn(['kg', 'lbs']).withMessage('Weight unit must be kg or lbs')
+], async (req, res) => {
   try {
-    const { height, weight, heightUnit = 'cm', weightUnit = 'kg' } = req.body
-    
-    if (!height || !weight) {
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
       return res.status(400).json({ 
-        error: 'Missing required fields',
-        message: 'Height and weight are required'
+        error: 'Validation failed',
+        details: errors.array()
       })
     }
+
+    const { height, weight, heightUnit = 'cm', weightUnit = 'kg' } = req.body
     
     // Convert to metric if needed
-    let heightInMeters = heightUnit === 'cm' ? height / 100 : height
-    let weightInKg = weightUnit === 'lbs' ? weight * 0.453592 : weight
+    let heightInMeters
+    let weightInKg
+    
+    if (heightUnit === 'cm') {
+      heightInMeters = height / 100
+    } else if (heightUnit === 'inches') {
+      heightInMeters = height * 0.0254
+    } else {
+      return res.status(400).json({ error: 'Invalid height unit' })
+    }
+    
+    if (weightUnit === 'kg') {
+      weightInKg = weight
+    } else if (weightUnit === 'lbs') {
+      weightInKg = weight * 0.453592
+    } else {
+      return res.status(400).json({ error: 'Invalid weight unit' })
+    }
     
     const bmi = weightInKg / (heightInMeters * heightInMeters)
     const category = calculateBMICategory(bmi)
@@ -102,12 +126,15 @@ router.post('/bmi/calculate', (req, res) => {
     const idealWeightMax = 24.9 * heightInMeters * heightInMeters
     
     res.json({
+      success: true,
       bmi: parseFloat(bmi.toFixed(1)),
       category: category.category,
       color: category.color,
       risk: category.risk,
       height: height,
       weight: weight,
+      heightUnit,
+      weightUnit,
       idealWeightRange: {
         min: parseFloat(idealWeightMin.toFixed(1)),
         max: parseFloat(idealWeightMax.toFixed(1)),
@@ -125,7 +152,11 @@ router.post('/bmi/calculate', (req, res) => {
     })
     
   } catch (error) {
-    res.status(500).json({ error: 'Failed to calculate BMI' })
+    console.error('BMI calculation error:', error)
+    res.status(500).json({ 
+      error: 'Failed to calculate BMI',
+      message: 'Internal server error'
+    })
   }
 })
 

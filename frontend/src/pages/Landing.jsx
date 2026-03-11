@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 import { 
   Activity, Shield, Brain, BarChart3, Zap, Heart, Stethoscope, Pill, FileImage, 
   MessageCircle, Calculator, Users, Star, ArrowRight, CheckCircle2, TrendingUp,
@@ -8,6 +9,7 @@ import {
 } from 'lucide-react'
 
 export default function Landing() {
+  const { user, logout } = useAuth()
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
       {/* Enhanced Navigation */}
@@ -36,12 +38,34 @@ export default function Landing() {
             </Link>
           </div>
           <div className="flex items-center gap-3">
-            <Link to="/login" className="px-4 py-2 text-slate-400 hover:text-slate-100 text-sm font-medium transition-all rounded-xl hover:bg-slate-900">
-              Sign in
-            </Link>
-            <Link to="/signup" className="px-5 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm font-semibold hover:from-blue-500 hover:to-purple-500 active:scale-[0.98] transition-all shadow-lg shadow-blue-500/20">
-              Get Started
-            </Link>
+            {user ? (
+              <>
+                <Link to="/app" className="px-4 py-2 text-slate-400 hover:text-slate-100 text-sm font-medium transition-all rounded-xl hover:bg-slate-900">
+                  Dashboard
+                </Link>
+                <Link to="/app/simple-news" className="px-4 py-2 text-slate-400 hover:text-slate-100 text-sm font-medium transition-all rounded-xl hover:bg-slate-900">
+                  Healthcare News
+                </Link>
+                <Link to="/app/profile" className="px-4 py-2 text-slate-400 hover:text-slate-100 text-sm font-medium transition-all rounded-xl hover:bg-slate-900">
+                  Profile
+                </Link>
+                <button 
+                  onClick={logout}
+                  className="px-4 py-2 text-red-400 hover:text-red-300 text-sm font-medium transition-all rounded-xl hover:bg-red-900/20"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <Link to="/login" className="px-4 py-2 text-slate-400 hover:text-slate-100 text-sm font-medium transition-all rounded-xl hover:bg-slate-900">
+                  Sign in
+                </Link>
+                <Link to="/signup" className="px-5 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm font-semibold hover:from-blue-500 hover:to-purple-500 active:scale-[0.98] transition-all shadow-lg shadow-blue-500/20">
+                  Get Started
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </nav>
@@ -64,13 +88,29 @@ export default function Landing() {
           </p>
           
           <div className="flex gap-4 justify-center flex-wrap mb-12">
-            <Link to="/signup" className="px-8 py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold text-base hover:from-blue-500 hover:to-purple-500 active:scale-[0.98] transition-all shadow-xl shadow-blue-500/20 flex items-center gap-2">
-              Start Free Trial
-              <ArrowRight className="w-5 h-5" />
-            </Link>
-            <Link to="/login" className="px-8 py-4 rounded-2xl border border-slate-700 text-slate-300 font-medium text-base hover:bg-slate-900 hover:border-slate-600 hover:text-slate-100 transition-all">
-              Sign In
-            </Link>
+            {user ? (
+              <>
+                <Link to="/app" className="px-8 py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold text-base hover:from-blue-500 hover:to-purple-500 active:scale-[0.98] transition-all shadow-xl shadow-blue-500/20 flex items-center gap-2">
+                  Go to Dashboard
+                  <ArrowRight className="w-5 h-5" />
+                </Link>
+                <Link to="/app/simple-news" className="px-8 py-4 rounded-2xl bg-slate-800 text-white font-semibold text-base hover:bg-slate-700 active:scale-[0.98] transition-all flex items-center gap-2">
+                  Healthcare News
+                  <ArrowRight className="w-5 h-5" />
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link to="/signup" className="px-8 py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold text-base hover:from-blue-500 hover:to-purple-500 active:scale-[0.98] transition-all shadow-xl shadow-blue-500/20 flex items-center gap-2">
+                  Start Free Trial
+                  <ArrowRight className="w-5 h-5" />
+                </Link>
+                <Link to="/login" className="px-8 py-4 rounded-2xl bg-slate-800 text-white font-semibold text-base hover:bg-slate-700 active:scale-[0.98] transition-all flex items-center gap-2">
+                  Sign In
+                  <ArrowRight className="w-5 h-5" />
+                </Link>
+              </>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
@@ -393,18 +433,43 @@ export default function Landing() {
             <div>
               <h3 className="text-white font-semibold mb-4">Product</h3>
               <div className="space-y-2">
-                <Link to="/app/predictions" className="block text-slate-400 hover:text-slate-300 text-sm transition-colors">
-                  Disease Prediction
-                </Link>
-                <Link to="/app/symptom-checker" className="block text-slate-400 hover:text-slate-300 text-sm transition-colors">
-                  Symptom Checker
-                </Link>
-                <Link to="/app/tools" className="block text-slate-400 hover:text-slate-300 text-sm transition-colors">
-                  NPPA Tools
-                </Link>
-                <Link to="/app/health-vault" className="block text-slate-400 hover:text-slate-300 text-sm transition-colors">
-                  Health Vault
-                </Link>
+                {user ? (
+                  <>
+                    <Link to="/app/predictions" className="block text-slate-400 hover:text-slate-300 text-sm transition-colors">
+                      Disease Prediction
+                    </Link>
+                    <Link to="/app/symptom-checker" className="block text-slate-400 hover:text-slate-300 text-sm transition-colors">
+                      Symptom Checker
+                    </Link>
+                    <Link to="/app/tools" className="block text-slate-400 hover:text-slate-300 text-sm transition-colors">
+                      NPPA Tools
+                    </Link>
+                    <Link to="/app/health-vault" className="block text-slate-400 hover:text-slate-300 text-sm transition-colors">
+                      Health Vault
+                    </Link>
+                    <Link to="/app/simple-news" className="block text-slate-400 hover:text-slate-300 text-sm transition-colors">
+                      Healthcare News
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <Link to="/login" className="block text-slate-400 hover:text-slate-300 text-sm transition-colors">
+                      Disease Prediction
+                    </Link>
+                    <Link to="/login" className="block text-slate-400 hover:text-slate-300 text-sm transition-colors">
+                      Symptom Checker
+                    </Link>
+                    <Link to="/login" className="block text-slate-400 hover:text-slate-300 text-sm transition-colors">
+                      NPPA Tools
+                    </Link>
+                    <Link to="/login" className="block text-slate-400 hover:text-slate-300 text-sm transition-colors">
+                      Health Vault
+                    </Link>
+                    <Link to="/login" className="block text-slate-400 hover:text-slate-300 text-sm transition-colors">
+                      Healthcare News
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
             

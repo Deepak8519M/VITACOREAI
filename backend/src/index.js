@@ -25,6 +25,7 @@ import smartMedicineAltRoutes from './routes/smartMedicineAlt.js';
 import nppaToolsRoutes from './routes/nppaTools.js';
 import vitalSignsRoutes from './routes/vitalSigns.js';
 import medicationManagementRoutes from './routes/medicationManagement.js';
+import medicinePriceAIRoutes from './routes/medicinePriceAI.js';
 
 dotenv.config();
 connectDB();
@@ -62,6 +63,7 @@ app.use('/api/smart-medicine', smartMedicineAltRoutes);
 app.use('/api/nppa', nppaToolsRoutes);
 app.use('/api/vital-signs', vitalSignsRoutes);
 app.use('/api/medication-management', medicationManagementRoutes);
+app.use('/api/medicine-price', medicinePriceAIRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'VitaCore AI API is running' });

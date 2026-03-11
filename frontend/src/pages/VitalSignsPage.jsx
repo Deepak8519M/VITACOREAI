@@ -13,11 +13,21 @@ const VitalSignsPage = () => {
   // Fetch vital signs statistics
   const fetchStats = async () => {
     try {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        console.error('No authentication token found')
+        return
+      }
+
+      const headers = {
+        'Authorization': `Bearer ${token}`
+      }
+
       // Fetch multiple statistics
       const [bmiResponse, bpResponse, totalResponse] = await Promise.all([
-        fetch('/api/vital-signs/stats/bmi?period=30'),
-        fetch('/api/vital-signs/stats/blood-pressure?period=30'),
-        fetch('/api/vital-signs/history/bmi?limit=100')
+        fetch('/api/vital-signs/stats/bmi?period=30', { headers }),
+        fetch('/api/vital-signs/stats/blood-pressure?period=30', { headers }),
+        fetch('/api/vital-signs/history/bmi?limit=100', { headers })
       ])
 
       let newStats = {
@@ -34,6 +44,8 @@ const VitalSignsPage = () => {
           newStats.averageBMI = bmiData.stats.averageValue || 0
           newStats.totalReadings += bmiData.stats.totalEntries || 0
         }
+      } else {
+        console.error('Failed to fetch BMI stats')
       }
 
       // Process Blood Pressure stats
@@ -46,6 +58,8 @@ const VitalSignsPage = () => {
           }
           newStats.totalReadings += bpData.stats.totalEntries || 0
         }
+      } else {
+        console.error('Failed to fetch BP stats')
       }
 
       // Process total readings from history
@@ -61,11 +75,14 @@ const VitalSignsPage = () => {
           ).length
           newStats.todayReadings = todayReadings
         }
+      } else {
+        console.error('Failed to fetch total readings')
       }
 
       setStats(newStats)
     } catch (error) {
       console.error('Failed to fetch vital signs stats:', error)
+      alert('Failed to load statistics. Please refresh the page.')
       // Set default values if API fails
       setStats({
         totalReadings: 0,

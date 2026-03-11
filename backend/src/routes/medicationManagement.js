@@ -1,99 +1,37 @@
 import express from 'express'
-import cors from 'cors'
+import { body, query, param, validationResult } from 'express-validator'
+import auth from '../middleware/auth.js'
+import { Medication, DrugInteraction, DrugInfo } from '../models/Medication.js'
 import rateLimit from 'express-rate-limit'
 
 const router = express.Router()
 
-// Mock database for medications and interactions
-const medicationDB = {
-  interactions: [
-    {
-      id: 1,
-      medications: ['warfarin', 'aspirin'],
-      severity: 'high',
-      effect: 'Increased risk of bleeding',
-      recommendation: 'Monitor for signs of bleeding, consider alternative therapy',
-      mechanism: 'Both medications affect blood clotting'
-    },
-    {
-      id: 2,
-      medications: ['lisinopril', 'potassium'],
-      severity: 'medium',
-      effect: 'Hyperkalemia risk',
-      recommendation: 'Monitor potassium levels regularly',
-      mechanism: 'ACE inhibitors can increase potassium levels'
-    },
-    {
-      id: 3,
-      medications: ['metformin', 'ibuprofen'],
-      severity: 'low',
-      effect: 'Slightly increased risk of lactic acidosis',
-      recommendation: 'Use with caution, monitor kidney function',
-      mechanism: 'NSAIDs can affect kidney function'
-    },
-    {
-      id: 4,
-      medications: ['simvastatin', 'clarithromycin'],
-      severity: 'high',
-      effect: 'Increased risk of rhabdomyolysis',
-      recommendation: 'Avoid concurrent use, consider alternative antibiotic',
-      mechanism: 'Clarithromycin inhibits simvastatin metabolism'
-    },
-    {
-      id: 5,
-      medications: ['digoxin', 'verapamil'],
-      severity: 'medium',
-      effect: 'Increased digoxin levels',
-      recommendation: 'Monitor digoxin levels, adjust dosage',
-      mechanism: 'Calcium channel blockers can increase digoxin absorption'
-    }
-  ],
-  drugInfo: {
-    'warfarin': {
-      class: 'Anticoagulant',
-      commonDosages: ['1mg', '2mg', '5mg', '10mg'],
-      frequency: 'once daily',
-      withFood: false,
-      precautions: ['Monitor INR regularly', 'Avoid vitamin K supplements', 'Watch for bleeding']
-    },
-    'aspirin': {
-      class: 'Antiplatelet',
-      commonDosages: ['81mg', '325mg'],
-      frequency: 'once daily',
-      withFood: true,
-      precautions: ['Take with food to avoid stomach upset', 'May increase bleeding risk']
-    },
-    'lisinopril': {
-      class: 'ACE Inhibitor',
-      commonDosages: ['10mg', '20mg', '40mg'],
-      frequency: 'once daily',
-      withFood: false,
-      precautions: ['Monitor blood pressure', 'Watch for cough', 'Avoid potassium supplements']
-    },
-    'metformin': {
-      class: 'Antidiabetic',
-      commonDosages: ['500mg', '850mg', '1000mg'],
-      frequency: 'twice daily',
-      withFood: true,
-      precautions: ['Take with meals', 'Monitor kidney function', 'Watch for lactic acidosis symptoms']
-    },
-    'simvastatin': {
-      class: 'Statin',
-      commonDosages: ['20mg', '40mg', '80mg'],
-      frequency: 'once daily',
-      withFood: false,
-      precautions: ['Take in evening', 'Monitor liver enzymes', 'Avoid grapefruit']
-    }
-  }
-}
+// Rate limiting for medication endpoints
+const medicationLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: { error: 'Too many medication requests, please try again later.' }
+})
 
-// Get medication information
-router.get('/info/:medication', (req, res) => {
+// Get medication information from database
+router.get('/info/:medication', [
+  medicationLimiter,
+  auth,
+  param('medication').isLength({ min: 2, max: 100 }).withMessage('Medication name must be 2-100 characters')
+], async (req, res) => {
   try {
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ 
+        error: 'Validation failed',
+        details: errors.array()
+      })
+    }
+
     const { medication } = req.params
-    const medicationName = medication.toLowerCase()
+    const medicationName = medication.toLowerCase().trim()
     
-    const info = medicationDB.drugInfo[medicationName]
+    const info = await DrugInfo.findOne({ name: medicationName }).lean()
     
     if (!info) {
       return res.status(404).json({ 
@@ -103,32 +41,47 @@ router.get('/info/:medication', (req, res) => {
     }
     
     res.json({
-      medication: medicationName,
-      ...info,
-      alternatives: ['Alternative 1', 'Alternative 2'] // Mock alternatives
+      success: true,
+      medication: info.name,
+      class: info.class,
+      commonDosages: info.commonDosages,
+      frequency: info.frequency,
+      withFood: info.withFood,
+      precautions: info.precautions,
+      alternatives: info.alternatives
     })
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch medication information' })
+    console.error('Medication info fetch error:', error)
+    res.status(500).json({ 
+      error: 'Failed to fetch medication information',
+      message: 'Internal server error'
+    })
   }
 })
 
-// Check drug interactions
-router.post('/interactions', (req, res) => {
+// Check drug interactions from database
+router.post('/interactions', [
+  medicationLimiter,
+  auth,
+  body('medications').isArray({ min: 2, max: 10 }).withMessage('Please provide 2-10 medications'),
+  body('medications.*').isLength({ min: 2, max: 100 }).withMessage('Each medication name must be 2-100 characters')
+], async (req, res) => {
   try {
-    const { medications } = req.body
-    
-    if (!medications || !Array.isArray(medications) || medications.length < 2) {
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
       return res.status(400).json({ 
-        error: 'Invalid request',
-        message: 'Please provide at least 2 medications to check for interactions'
+        error: 'Validation failed',
+        details: errors.array()
       })
     }
+
+    const { medications } = req.body
     
     const normalizedMeds = medications.map(med => med.toLowerCase().trim())
     const foundInteractions = []
     
-    // Check for interactions
-    medicationDB.interactions.forEach(interaction => {
+    // Check for interactions in database
+    for (const interaction of await DrugInteraction.find().lean()) {
       const matchingMeds = interaction.medications.filter(med => 
         normalizedMeds.some(userMed => 
           userMed.includes(med) || med.includes(userMed)
@@ -137,18 +90,23 @@ router.post('/interactions', (req, res) => {
       
       if (matchingMeds.length >= 2) {
         foundInteractions.push({
-          ...interaction,
-          detectedMedications: matchingMeds,
+          id: interaction._id,
+          medications: matchingMeds,
+          severity: interaction.severity,
+          effect: interaction.effect,
+          recommendation: interaction.recommendation,
+          mechanism: interaction.mechanism,
           confidence: 'high'
         })
       }
-    })
+    }
     
-    // Sort by severity
+    // Sort by severity (high > medium > low)
     const severityOrder = { high: 3, medium: 2, low: 1 }
     foundInteractions.sort((a, b) => severityOrder[b.severity] - severityOrder[a.severity])
     
     res.json({
+      success: true,
       medications: normalizedMeds,
       interactions: foundInteractions,
       totalInteractions: foundInteractions.length,
@@ -156,7 +114,11 @@ router.post('/interactions', (req, res) => {
     })
     
   } catch (error) {
-    res.status(500).json({ error: 'Failed to check interactions' })
+    console.error('Drug interaction check error:', error)
+    res.status(500).json({ 
+      error: 'Failed to check interactions',
+      message: 'Internal server error'
+    })
   }
 })
 
@@ -330,50 +292,73 @@ router.get('/pharmacies', (req, res) => {
   }
 })
 
-// Get refill reminders (mock)
-router.get('/refill-reminders', (req, res) => {
+// Get refill reminders from database
+router.get('/refill-reminders', [
+  medicationLimiter,
+  auth,
+  query('userId').optional().isString().withMessage('User ID must be a string')
+], async (req, res) => {
   try {
-    const { userId } = req.query
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ 
+        error: 'Validation failed',
+        details: errors.array()
+      })
+    }
+
+    // Get medications for the authenticated user
+    const medications = await Medication.find({ 
+      userId: req.user.id,
+      status: 'active'
+    }).lean()
     
-    // Mock refill reminders
-    const reminders = [
-      {
-        id: 1,
-        medication: 'Lisinopril',
-        dosage: '10mg',
-        currentSupply: 15,
-        totalSupply: 30,
-        dailyDosage: 1,
-        daysRemaining: 15,
-        refillDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        pharmacy: 'CVS Pharmacy',
-        status: 'moderate',
-        lastRefill: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString()
-      },
-      {
-        id: 2,
-        medication: 'Metformin',
-        dosage: '500mg',
-        currentSupply: 8,
-        totalSupply: 60,
-        dailyDosage: 2,
-        daysRemaining: 4,
-        refillDate: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        pharmacy: 'Walgreens',
-        status: 'critical',
-        lastRefill: new Date(Date.now() - 26 * 24 * 60 * 60 * 1000).toISOString()
+    const reminders = medications.map(med => {
+      const daysRemaining = Math.ceil((med.refillDate - new Date()) / (1000 * 60 * 60 * 24))
+      const adherenceRate = ((med.totalSupply - med.currentSupply) / med.totalSupply) * 100
+      
+      let status = 'low'
+      if (daysRemaining <= 7) status = 'critical'
+      else if (daysRemaining <= 14) status = 'moderate'
+      
+      return {
+        id: med._id,
+        medication: med.name,
+        dosage: med.dosage,
+        currentSupply: med.currentSupply,
+        totalSupply: med.totalSupply,
+        dailyDosage: med.dailyDosage,
+        daysRemaining: Math.max(0, daysRemaining),
+        refillDate: med.refillDate.toISOString().split('T')[0],
+        pharmacy: med.pharmacy || 'Not specified',
+        status,
+        adherenceRate: Math.round(adherenceRate),
+        lastRefill: med.lastRefill.toISOString()
       }
-    ]
+    })
+    
+    // Sort by urgency (critical first)
+    reminders.sort((a, b) => {
+      const statusOrder = { critical: 3, moderate: 2, low: 1 }
+      return statusOrder[b.status] - statusOrder[a.status]
+    })
     
     res.json({
-      userId: userId || 'anonymous',
+      success: true,
+      userId: req.user.id,
       reminders: reminders,
       total: reminders.length,
-      criticalRefills: reminders.filter(r => r.status === 'critical').length
+      criticalRefills: reminders.filter(r => r.status === 'critical').length,
+      moderateRefills: reminders.filter(r => r.status === 'moderate').length,
+      generatedAt: new Date().toISOString()
     })
     
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch refill reminders' })
+    console.error('Refill reminders fetch error:', error)
+    res.status(500).json({ 
+      error: 'Failed to fetch refill reminders',
+      message: 'Internal server error'
+    })
   }
 })
 

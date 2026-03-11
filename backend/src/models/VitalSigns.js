@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import healthEncryption from '../utils/encryption.js';
 
 const vitalSignsSchema = new mongoose.Schema({
   userId: {
@@ -155,7 +156,21 @@ const vitalSignsSchema = new mongoose.Schema({
   // Common fields
   notes: {
     type: String,
-    maxlength: 500
+    maxlength: 500,
+    set: function(value) {
+      // Encrypt notes before saving
+      if (value) {
+        return healthEncryption.encrypt(value);
+      }
+      return value;
+    },
+    get: function(value) {
+      // Decrypt notes when retrieving
+      if (value && typeof value === 'object') {
+        return healthEncryption.decrypt(value);
+      }
+      return value;
+    }
   },
   risk: {
     type: String,

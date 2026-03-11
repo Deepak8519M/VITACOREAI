@@ -160,82 +160,192 @@ router.post('/bmi/calculate', [
   }
 })
 
-// Save BMI entry
-router.post('/bmi/save', (req, res) => {
+// Save BMI entry with database persistence
+router.post('/bmi/save', [
+  vitalSignsLimiter,
+  auth,
+  body('height').isFloat({ min: 50, max: 300 }).withMessage('Height must be between 50-300 cm'),
+  body('weight').isFloat({ min: 1, max: 500 }).withMessage('Weight must be between 1-500 kg'),
+  body('bmi').isFloat({ min: 10, max: 100 }).withMessage('BMI must be between 10-100'),
+  body('category').isIn(['Underweight', 'Normal weight', 'Overweight', 'Obese']).withMessage('Invalid BMI category'),
+  body('notes').optional().isLength({ max: 500 }).withMessage('Notes must be less than 500 characters')
+], async (req, res) => {
   try {
-    const { userId, height, weight, bmi, category, notes } = req.body
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ 
+        error: 'Validation failed',
+        details: errors.array()
+      })
+    }
+
+    const { height, weight, bmi, category, notes, heightUnit = 'cm', weightUnit = 'kg' } = req.body
     
-    const entry = {
-      id: Date.now(),
-      userId: userId || 'anonymous',
-      height,
-      weight,
-      bmi,
-      category,
-      notes: notes || '',
-      date: new Date().toISOString()
+    // Check for duplicate entry within last hour
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000)
+    const existingEntry = await VitalSigns.findOne({
+      userId: req.user.id,
+      type: 'bmi',
+      date: { $gte: oneHourAgo }
+    })
+    
+    if (existingEntry) {
+      return res.status(409).json({
+        error: 'Duplicate entry',
+        message: 'BMI entry already exists within the last hour'
+      })
     }
     
-    vitalSignsDB.bmi.push(entry)
+    const entry = new VitalSigns({
+      userId: req.user.id,
+      type: 'bmi',
+      height: parseFloat(height),
+      weight: parseFloat(weight),
+      heightUnit,
+      weightUnit,
+      bmi: parseFloat(bmi),
+      bmiCategory: category,
+      notes: notes || '',
+      risk: calculateBMICategory(parseFloat(bmi)).risk,
+      color: calculateBMICategory(parseFloat(bmi)).color
+    })
     
-    res.json({
+    await entry.save()
+    
+    res.status(201).json({
       success: true,
-      entry: entry,
+      entry: {
+        id: entry._id,
+        userId: entry.userId,
+        height: entry.height,
+        weight: entry.weight,
+        bmi: entry.bmi,
+        category: entry.bmiCategory,
+        notes: entry.notes,
+        date: entry.date,
+        risk: entry.risk,
+        color: entry.color
+      },
       message: 'BMI entry saved successfully'
     })
     
   } catch (error) {
-    res.status(500).json({ error: 'Failed to save BMI entry' })
+    console.error('BMI save error:', error)
+    if (error.code === 11000) {
+      return res.status(409).json({
+        error: 'Duplicate entry',
+        message: 'BMI entry already exists'
+      })
+    }
+    res.status(500).json({ 
+      error: 'Failed to save BMI entry',
+      message: 'Internal server error'
+    })
   }
 })
 
-// Blood Pressure Tracker
-router.post('/blood-pressure/save', (req, res) => {
+// Blood Pressure Tracker with proper validation
+router.post('/blood-pressure/save', [
+  vitalSignsLimiter,
+  auth,
+  body('systolic').isInt({ min: 60, max: 300 }).withMessage('Systolic must be between 60-300 mmHg'),
+  body('diastolic').isInt({ min: 30, max: 200 }).withMessage('Diastolic must be between 30-200 mmHg'),
+  body('pulse').optional().isInt({ min: 30, max: 250 }).withMessage('Pulse must be between 30-250 bpm'),
+  body('position').optional().isIn(['sitting', 'standing', 'lying']).withMessage('Invalid position'),
+  body('notes').optional().isLength({ max: 500 }).withMessage('Notes must be less than 500 characters')
+], async (req, res) => {
   try {
-    const { userId, systolic, diastolic, pulse, notes, position = 'sitting' } = req.body
-    
-    if (!systolic || !diastolic) {
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
       return res.status(400).json({ 
-        error: 'Missing required fields',
-        message: 'Systolic and diastolic pressures are required'
+        error: 'Validation failed',
+        details: errors.array()
+      })
+    }
+
+    const { systolic, diastolic, pulse, notes, position = 'sitting' } = req.body
+    
+    // Validate blood pressure relationship
+    if (parseInt(systolic) <= parseInt(diastolic)) {
+      return res.status(400).json({
+        error: 'Invalid blood pressure',
+        message: 'Systolic must be greater than diastolic'
       })
     }
     
     const category = calculateBloodPressureCategory(parseInt(systolic), parseInt(diastolic))
     
-    const entry = {
-      id: Date.now(),
-      userId: userId || 'anonymous',
+    // Check for duplicate entry within last hour
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000)
+    const existingEntry = await VitalSigns.findOne({
+      userId: req.user.id,
+      type: 'bloodPressure',
+      date: { $gte: oneHourAgo }
+    })
+    
+    if (existingEntry) {
+      return res.status(409).json({
+        error: 'Duplicate entry',
+        message: 'Blood pressure entry already exists within the last hour'
+      })
+    }
+    
+    const entry = new VitalSigns({
+      userId: req.user.id,
+      type: 'bloodPressure',
       systolic: parseInt(systolic),
       diastolic: parseInt(diastolic),
       pulse: pulse ? parseInt(pulse) : null,
+      bpPosition: position,
       notes: notes || '',
-      position,
-      category: category.category,
-      color: category.color,
+      bpCategory: category.category,
       risk: category.risk,
-      date: new Date().toISOString()
-    }
+      color: category.color
+    })
     
-    vitalSignsDB.bloodPressure.push(entry)
+    await entry.save()
     
-    res.json({
+    const recommendations = [
+      category.category === 'Normal' ? 'Continue healthy lifestyle' :
+      category.category === 'Elevated' ? 'Consider dietary changes and exercise' :
+      category.category.includes('Hypertension') ? 'Consult healthcare provider' :
+      'Seek immediate medical attention',
+      'Monitor blood pressure regularly',
+      'Reduce sodium intake',
+      'Maintain healthy weight'
+    ]
+    
+    res.status(201).json({
       success: true,
-      entry: entry,
-      message: 'Blood pressure reading saved successfully',
-      recommendations: [
-        category.category === 'Normal' ? 'Continue healthy lifestyle' :
-        category.category === 'Elevated' ? 'Consider dietary changes and exercise' :
-        category.category.includes('Hypertension') ? 'Consult healthcare provider' :
-        'Seek immediate medical attention',
-        'Monitor blood pressure regularly',
-        'Reduce sodium intake',
-        'Maintain healthy weight'
-      ]
+      entry: {
+        id: entry._id,
+        userId: entry.userId,
+        systolic: entry.systolic,
+        diastolic: entry.diastolic,
+        pulse: entry.pulse,
+        position: entry.bpPosition,
+        notes: entry.notes,
+        category: entry.bpCategory,
+        date: entry.date,
+        risk: entry.risk,
+        color: entry.color
+      },
+      recommendations,
+      message: 'Blood pressure reading saved successfully'
     })
     
   } catch (error) {
-    res.status(500).json({ error: 'Failed to save blood pressure reading' })
+    console.error('Blood pressure save error:', error)
+    if (error.code === 11000) {
+      return res.status(409).json({
+        error: 'Duplicate entry',
+        message: 'Blood pressure entry already exists'
+      })
+    }
+    res.status(500).json({ 
+      error: 'Failed to save blood pressure reading',
+      message: 'Internal server error'
+    })
   }
 })
 
@@ -387,55 +497,134 @@ router.post('/temperature/save', (req, res) => {
   }
 })
 
-// Get vital signs history
-router.get('/history/:type', (req, res) => {
+// Get vital signs history from database
+router.get('/history/:type', [
+  auth,
+  param('type').isIn(['bmi', 'blood-pressure', 'heart-rate', 'blood-sugar', 'temperature'])
+    .withMessage('Invalid vital sign type'),
+  query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1-100'),
+  query('startDate').optional().isISO8601().withMessage('Invalid start date format'),
+  query('endDate').optional().isISO8601().withMessage('Invalid end date format')
+], async (req, res) => {
   try {
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ 
+        error: 'Validation failed',
+        details: errors.array()
+      })
+    }
+
     const { type } = req.params
-    const { userId, limit = 10, startDate, endDate } = req.query
+    const { limit = 10, startDate, endDate } = req.query
     
     // Convert kebab-case to camelCase for database lookup
-    const dbKey = type.replace(/-([a-z])/g, (match, letter) => letter.toUpperCase())
+    const typeMapping = {
+      'bmi': 'bmi',
+      'blood-pressure': 'bloodPressure', 
+      'heart-rate': 'heartRate',
+      'blood-sugar': 'bloodSugar',
+      'temperature': 'temperature'
+    }
     
-    if (!vitalSignsDB[dbKey]) {
+    const dbType = typeMapping[type]
+    if (!dbType) {
       return res.status(404).json({ 
         error: 'Invalid vital sign type',
         message: 'Valid types are: bmi, blood-pressure, heart-rate, blood-sugar, temperature'
       })
     }
     
-    let entries = vitalSignsDB[dbKey]
-    
-    // Filter by user
-    if (userId) {
-      entries = entries.filter(entry => entry.userId === userId)
+    // Build query
+    const query = {
+      userId: req.user.id,
+      type: dbType
     }
     
-    // Filter by date range
-    if (startDate) {
-      entries = entries.filter(entry => new Date(entry.date) >= new Date(startDate))
-    }
-    if (endDate) {
-      entries = entries.filter(entry => new Date(entry.date) <= new Date(endDate))
+    // Add date range filters
+    if (startDate || endDate) {
+      query.date = {}
+      if (startDate) {
+        query.date.$gte = new Date(startDate)
+      }
+      if (endDate) {
+        query.date.$lte = new Date(endDate)
+      }
     }
     
-    // Sort by date (newest first)
-    entries.sort((a, b) => new Date(b.date) - new Date(a.date))
+    // Query database with proper error handling
+    let entries = await VitalSigns
+      .find(query)
+      .sort({ date: -1 })
+      .limit(parseInt(limit))
+      .lean() // Convert to plain JavaScript objects
+      .catch(err => {
+        console.error('Database query error:', err)
+        throw new Error('Failed to fetch vital signs history')
+      })
     
-    // Apply limit
-    if (limit) {
-      entries = entries.slice(0, parseInt(limit))
-    }
+    // Transform entries to match expected format
+    const transformedEntries = entries.map(entry => {
+      const transformed = {
+        id: entry._id,
+        userId: entry.userId,
+        date: entry.date,
+        notes: entry.notes || '',
+        risk: entry.risk,
+        color: entry.color
+      }
+      
+      // Add type-specific fields
+      if (dbType === 'bmi') {
+        transformed.height = entry.height
+        transformed.weight = entry.weight
+        transformed.bmi = entry.bmi
+        transformed.category = entry.bmiCategory
+      } else if (dbType === 'bloodPressure') {
+        transformed.systolic = entry.systolic
+        transformed.diastolic = entry.diastolic
+        transformed.pulse = entry.pulse
+        transformed.position = entry.bpPosition
+        transformed.category = entry.bpCategory
+      } else if (dbType === 'heartRate') {
+        transformed.heartRate = entry.heartRate
+        transformed.activity = entry.activity
+        transformed.duration = entry.duration
+        transformed.zone = entry.hrZone
+      } else if (dbType === 'bloodSugar') {
+        transformed.glucose = entry.glucose
+        transformed.timing = entry.timing
+        transformed.meal = entry.meal
+        transformed.medication = entry.medication
+        transformed.category = entry.bsCategory
+      } else if (dbType === 'temperature') {
+        transformed.temperature = entry.temperature
+        transformed.unit = entry.unit
+        transformed.symptoms = entry.symptoms || []
+        transformed.category = entry.tempCategory
+      }
+      
+      return transformed
+    })
     
     res.json({
       success: true,
-      entries: entries,
-      total: entries.length,
-      type: type
+      entries: transformedEntries,
+      total: transformedEntries.length,
+      type: type,
+      filters: {
+        limit: parseInt(limit),
+        startDate: startDate || null,
+        endDate: endDate || null
+      }
     })
     
   } catch (error) {
-    console.error('Error fetching vital signs history:', error)
-    res.status(500).json({ error: 'Failed to fetch vital signs history' })
+    console.error('History fetch error:', error)
+    res.status(500).json({ 
+      error: 'Failed to fetch vital signs history',
+      message: 'Internal server error'
+    })
   }
 })
 

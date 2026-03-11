@@ -21,15 +21,33 @@ const VitalSignsTracker = ({ onRefresh }) => {
   useEffect(() => {
     const fetchVitalSignsHistory = async () => {
       try {
+        const token = localStorage.getItem('token')
+        if (!token) {
+          console.error('No authentication token found')
+          return
+        }
+
         const types = ['bmi', 'blood-pressure', 'heart-rate', 'blood-sugar', 'temperature']
         const promises = types.map(type => 
-          fetch(`/api/vital-signs/history/${type}?limit=10`)
+          fetch(`/api/vital-signs/history/${type}?limit=10`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          })
             .then(res => {
-              if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`)
+              if (!res.ok) {
+                if (res.status === 401) {
+                  throw new Error('Authentication required. Please log in again.')
+                }
+                throw new Error(`HTTP error! status: ${res.status}`)
+              }
               return res.json()
             })
             .then(data => ({ type, entries: data.entries || [] }))
-            .catch(() => ({ type, entries: [] }))
+            .catch(error => {
+              console.error(`Failed to fetch ${type} history:`, error)
+              return { type, entries: [] }
+            })
         )
         
         const results = await Promise.all(promises)
@@ -52,7 +70,7 @@ const VitalSignsTracker = ({ onRefresh }) => {
         setVitals(newVitals)
       } catch (error) {
         console.error('Failed to fetch vital signs history:', error)
-        // Keep empty state if API fails - user can still add new entries
+        alert('Failed to load vital signs data. Please refresh the page.')
       }
     }
 
@@ -134,6 +152,7 @@ const VitalSignsTracker = ({ onRefresh }) => {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
             },
             body: JSON.stringify({
               height: parseFloat(height),
@@ -152,21 +171,12 @@ const VitalSignsTracker = ({ onRefresh }) => {
               ...prev,
               bmi: [newEntry, ...prev.bmi]
             }))
+            
+            // Show success message
+            alert('BMI saved successfully!')
           } else {
-            // If API fails, save locally
-            const newEntry = {
-              id: Date.now(),
-              date: new Date().toISOString(),
-              height: parseFloat(height),
-              weight: parseFloat(weight),
-              bmi: parseFloat(bmiResult.value),
-              category: bmiResult.category
-            }
-            setVitals(prev => ({
-              ...prev,
-              bmi: [newEntry, ...prev.bmi]
-            }))
-            console.log('Saved locally (API unavailable)')
+            const errorData = await response.json()
+            throw new Error(errorData.message || 'Failed to save BMI')
           }
           
           setHeight('')
@@ -180,28 +190,7 @@ const VitalSignsTracker = ({ onRefresh }) => {
           }
         } catch (error) {
           console.error('Error saving BMI:', error)
-          // Still save locally even if API fails
-          const newEntry = {
-            id: Date.now(),
-            date: new Date().toISOString(),
-            height: parseFloat(height),
-            weight: parseFloat(weight),
-            bmi: parseFloat(bmiResult.value),
-            category: bmiResult.category
-          }
-          setVitals(prev => ({
-            ...prev,
-            bmi: [newEntry, ...prev.bmi]
-          }))
-          setHeight('')
-          setWeight('')
-          setBmiResult(null)
-          setShowAddForm(false)
-          
-          // Refresh parent statistics
-          if (onRefresh) {
-            onRefresh()
-          }
+          alert(`Failed to save BMI: ${error.message}. Please try again.`)
         }
       }
     }
@@ -372,6 +361,7 @@ const VitalSignsTracker = ({ onRefresh }) => {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
             },
             body: JSON.stringify({
               systolic: parseInt(systolic),
@@ -390,23 +380,12 @@ const VitalSignsTracker = ({ onRefresh }) => {
               ...prev,
               bloodPressure: [newEntry, ...prev.bloodPressure]
             }))
+            
+            // Show success message
+            alert('Blood pressure saved successfully!')
           } else {
-            // Save locally if API fails
-            const newEntry = {
-              id: Date.now(),
-              date: new Date().toISOString(),
-              systolic: parseInt(systolic),
-              diastolic: parseInt(diastolic),
-              pulse: pulse ? parseInt(pulse) : null,
-              notes,
-              category: category.category,
-              color: category.color
-            }
-            setVitals(prev => ({
-              ...prev,
-              bloodPressure: [newEntry, ...prev.bloodPressure]
-            }))
-            console.log('Saved locally (API unavailable)')
+            const errorData = await response.json()
+            throw new Error(errorData.message || 'Failed to save blood pressure')
           }
           
           setSystolic('')
@@ -420,30 +399,7 @@ const VitalSignsTracker = ({ onRefresh }) => {
           }
         } catch (error) {
           console.error('Error saving blood pressure:', error)
-          // Still save locally even if API fails
-          const newEntry = {
-            id: Date.now(),
-            date: new Date().toISOString(),
-            systolic: parseInt(systolic),
-            diastolic: parseInt(diastolic),
-            pulse: pulse ? parseInt(pulse) : null,
-            notes,
-            category: category.category,
-            color: category.color
-          }
-          setVitals(prev => ({
-            ...prev,
-            bloodPressure: [newEntry, ...prev.bloodPressure]
-          }))
-          setSystolic('')
-          setDiastolic('')
-          setPulse('')
-          setNotes('')
-          
-          // Refresh parent statistics
-          if (onRefresh) {
-            onRefresh()
-          }
+          alert(`Failed to save blood pressure: ${error.message}. Please try again.`)
         }
       }
     }

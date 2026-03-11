@@ -31,6 +31,7 @@ import NppaBasket from './pages/NppaBasket'
 import VitalSignsPage from './pages/VitalSignsPage'
 import MedicationPage from './pages/MedicationPage'
 import MedicinePriceAI from './pages/MedicinePriceAI'
+import SimpleNews from './pages/SimpleNews'
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
@@ -66,6 +67,7 @@ export default function App() {
         <Route path="tools/nppa-cheapest-dose" element={<NppaCheapestDose />} />
         <Route path="tools/vitalsense" element={<VitalSense />} />
         <Route path="medicine-price-ai" element={<MedicinePriceAI />} />
+        <Route path="simple-news" element={<SimpleNews />} />
         <Route path="vital-signs" element={<VitalSignsPage />} />
         <Route path="medication-management" element={<MedicationPage />} />
         <Route path="health-vault" element={<HealthVault />} />

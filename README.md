@@ -1,4 +1,4 @@
-# VitaCore AI - Premium AI-Powered Healthcare Prediction Platform
+# VITACORE AI - Premium AI-Powered Healthcare Prediction Platform
 
 A full-stack multi-disease prediction system with secure health management, built with React, Node.js, and Python ML models.
 
